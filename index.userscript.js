@@ -9,8 +9,8 @@
 // @match        *://yandex.ru/search*
 // @match        *://ya.ru/search*
 // @icon         https://github.com/xxrxtnxxov/Index-Counter-Y-G/blob/main/index.jpg?raw=true
-// @updateURL    https://raw.githubusercontent.com/xxrxtnxxov/Index-Counter-Y-G/main/script.user.js
-// @downloadURL  https://raw.githubusercontent.com/xxrxtnxxov/Index-Counter-Y-G/main/script.user.js
+// @updateURL    https://github.com/xxrxtnxxov/Index-Counter-Y-G/raw/refs/heads/main/index.userscript.js
+// @downloadURL  https://github.com/xxrxtnxxov/Index-Counter-Y-G/raw/refs/heads/main/index.userscript.js
 // @grant        none
 // ==/UserScript==
 
