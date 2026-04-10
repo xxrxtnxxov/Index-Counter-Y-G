@@ -4,6 +4,7 @@
 // @version      4.6
 // @description  SEO-счетчик: показывает количество проиндексированных страниц в выдаче Google и Яндекса.
 // @author       xxrxtnxxov
+// @license      MIT
 // @match        *://*.google.com/search*
 // @match        *://*.google.ru/search*
 // @match        *://yandex.ru/search*
