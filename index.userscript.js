@@ -8,7 +8,7 @@
 // @match        *://*.google.ru/search*
 // @match        *://yandex.ru/search*
 // @match        *://ya.ru/search*
-// @icon         https://raw.githubusercontent.com/xxrxtnxxov/Index-Counter-Y-G/main/icon.png
+// @icon         https://github.com/xxrxtnxxov/Index-Counter-Y-G/blob/main/index.jpg?raw=true
 // @updateURL    https://raw.githubusercontent.com/xxrxtnxxov/Index-Counter-Y-G/main/script.user.js
 // @downloadURL  https://raw.githubusercontent.com/xxrxtnxxov/Index-Counter-Y-G/main/script.user.js
 // @grant        none
