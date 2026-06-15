@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SEO Index Counter (Google & Yandex)
 // @namespace    https://github.com/xxrxtnxxov/Index-Counter-Y-G
-// @version      4.6
+// @version      4.7
 // @description  SEO-счетчик: показывает количество проиндексированных страниц в выдаче Google и Яндекса.
 // @author       xxrxtnxxov
 // @license      MIT
@@ -25,9 +25,10 @@
     function createBadge(id, textHtml, bgColor, borderStyle, textColor) {
         const div = document.createElement('div');
         div.id = id;
-        div.style = `
+        div.style.cssText = `
             display: flex;
             align-items: center;
+            flex: 0 0 auto;
             padding: 0 16px;
             margin: 0 8px;
             background: ${bgColor};
@@ -48,7 +49,9 @@
     function safeDOMUpdate(action) {
         if (observer) observer.disconnect();
         action();
-        if (observer) observer.observe(document.documentElement, { childList: true, subtree: true });
+        if (observer) {
+            observer.observe(document.documentElement, { childList: true, subtree: true });
+        }
     }
 
     function checkUrlChange() {
@@ -56,10 +59,8 @@
             lastUrl = location.href;
             lastCount = null;
             safeDOMUpdate(() => {
-                const badgeG = document.getElementById('custom-stats-counter');
-                const badgeY = document.getElementById('custom-yandex-counter');
-                if (badgeG) badgeG.remove();
-                if (badgeY) badgeY.remove();
+                document.getElementById('custom-stats-counter')?.remove();
+                document.getElementById('custom-yandex-counter')?.remove();
             });
         }
     }
@@ -80,7 +81,7 @@
 
         if (!cleanCount) {
             if (badge) {
-                safeDOMUpdate(() => { badge.remove(); });
+                safeDOMUpdate(() => badge.remove());
                 lastCount = null;
             }
             return;
@@ -89,48 +90,73 @@
         const badgeHtml = `Индекс G: <span style="color: #8ab4f8; font-weight: bold; margin-left: 6px;">${cleanCount}</span>`;
 
         if (!badge) {
+            const searchBar = document.querySelector('.RNNXgb');
+            if (!searchBar) return;
+
             safeDOMUpdate(() => {
-                const div = createBadge('custom-stats-counter', badgeHtml, '#303134', '1px solid #5f6368', '#e8eaed');
-                const searchBar = document.querySelector('.RNNXgb');
-                if (searchBar) {
-                    searchBar.insertAdjacentElement('afterend', div);
-                    if (searchBar.parentElement) {
-                        searchBar.parentElement.style.display = 'flex';
-                        searchBar.parentElement.style.alignItems = 'center';
-                    }
-                }
+                badge = createBadge(
+                    'custom-stats-counter',
+                    badgeHtml,
+                    '#303134',
+                    '1px solid #5f6368',
+                    '#e8eaed'
+                );
+
+                // Плашка не участвует в layout Google и не сдвигает popup подсказок.
+                badge.style.position = 'absolute';
+                badge.style.left = 'calc(100% + 8px)';
+                badge.style.top = '0';
+                badge.style.margin = '0';
+                badge.style.pointerEvents = 'none';
+                searchBar.appendChild(badge);
             });
             lastCount = cleanCount;
         } else if (lastCount !== cleanCount) {
-            safeDOMUpdate(() => { badge.innerHTML = badgeHtml; });
+            safeDOMUpdate(() => {
+                badge.innerHTML = badgeHtml;
+            });
             lastCount = cleanCount;
         }
     }
 
     // === YANDEX ===
+    function findYandexAdvancedSearchButton() {
+        return document.querySelector(
+            'button[aria-label="Расширенный поиск"], ' +
+            'button[title="Расширенный поиск"], ' +
+            'button[class*="Actions-AdvancedSearch"]'
+        );
+    }
+
     function showYandexStats() {
         let cleanCount = null;
-        const titleText = document.title || "";
+        const titleText = document.title || '';
 
-        // 1. Проверяем на пустую выдачу в title
         if (/ничего не найдено/i.test(titleText)) {
             cleanCount = '0';
         } else {
-            // 2. Ищем стандартный счетчик в title
             const titleMatch = titleText.match(/(?:наш[а-яё]+|найдено)\s+(.*?)\s+(?:результ|ответ)/i);
             if (titleMatch && titleMatch[1]) {
                 cleanCount = titleMatch[1].trim();
             } else {
-                // 3. Ищем в текстовых узлах документа
-                const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null, false);
+                const walker = document.createTreeWalker(
+                    document.body,
+                    NodeFilter.SHOW_TEXT,
+                    null,
+                    false
+                );
                 let node;
+
                 while ((node = walker.nextNode())) {
                     const text = node.nodeValue.trim();
                     if (/ничего не (?:нашли|найдено)/i.test(text)) {
                         cleanCount = '0';
                         break;
                     }
-                    const nodeMatch = text.match(/(?:наш[а-яё]+|найдено)\s+([\d\s\u00A0\xA0]+(?:тыс|млн)?\.?)\s*(?:результ|ответ|страниц)/i);
+
+                    const nodeMatch = text.match(
+                        /(?:наш[а-яё]+|найдено)\s+([\d\s\u00A0\xA0]+(?:тыс|млн)?\.?)\s*(?:результ|ответ|страниц)/i
+                    );
                     if (nodeMatch && nodeMatch[1]) {
                         cleanCount = nodeMatch[1].trim();
                         break;
@@ -141,10 +167,9 @@
 
         let badge = document.getElementById('custom-yandex-counter');
 
-        // Если данных нет, удаляем старую плашку (спасет от залипания при загрузке)
         if (!cleanCount) {
             if (badge) {
-                safeDOMUpdate(() => { badge.remove(); });
+                safeDOMUpdate(() => badge.remove());
                 lastCount = null;
             }
             return;
@@ -153,52 +178,52 @@
         const badgeHtml = `Индекс Я: <span style="color: #ff5c5c; font-weight: bold; margin-left: 6px;">${cleanCount}</span>`;
 
         if (!badge) {
-            safeDOMUpdate(() => {
-                badge = createBadge('custom-yandex-counter', badgeHtml, '#222224', '2px solid #fc0', '#e8eaed');
-                const targetBtn = document.querySelector('.HeaderDesktopActions-AdvancedSearch');
+            const targetBtn = findYandexAdvancedSearchButton();
+            if (!targetBtn) return;
 
-                if (targetBtn) {
-                    targetBtn.insertAdjacentElement('afterend', badge);
-                } else {
-                    const actionsBlock = document.querySelector('.HeaderDesktopActions') || document.querySelector('.HeaderDesktop-Actions');
-                    if (actionsBlock) {
-                        actionsBlock.appendChild(badge);
-                    } else {
-                        badge.style.position = 'fixed';
-                        badge.style.top = '15px';
-                        badge.style.right = '20px';
-                        badge.style.boxShadow = '0 4px 12px rgba(0,0,0,0.5)';
-                        document.body.appendChild(badge);
-                    }
-                }
+            safeDOMUpdate(() => {
+                badge = createBadge(
+                    'custom-yandex-counter',
+                    badgeHtml,
+                    '#222224',
+                    '2px solid #fc0',
+                    '#e8eaed'
+                );
+                targetBtn.insertAdjacentElement('afterend', badge);
             });
             lastCount = cleanCount;
         } else if (lastCount !== cleanCount) {
-            safeDOMUpdate(() => { badge.innerHTML = badgeHtml; });
+            safeDOMUpdate(() => {
+                badge.innerHTML = badgeHtml;
+            });
             lastCount = cleanCount;
         }
     }
 
     // === ДИСПЕТЧЕР ===
     let isRunning = false;
+
     function init() {
         if (isRunning) return;
         isRunning = true;
 
-        checkUrlChange();
+        try {
+            checkUrlChange();
 
-        const host = window.location.hostname;
-        if (host.includes('google.')) {
-            showGoogleStats();
-        } else if (host.includes('yandex.ru') || host.includes('ya.ru')) {
-            showYandexStats();
+            const host = window.location.hostname;
+            if (host.includes('google.')) {
+                showGoogleStats();
+            } else if (host.includes('yandex.ru') || host.includes('ya.ru')) {
+                showYandexStats();
+            }
+        } finally {
+            isRunning = false;
         }
-
-        isRunning = false;
     }
 
     observer = new MutationObserver(init);
     observer.observe(document.documentElement, { childList: true, subtree: true });
 
     setInterval(init, 1000);
+    init();
 })();
